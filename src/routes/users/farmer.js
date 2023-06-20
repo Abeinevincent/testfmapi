@@ -470,7 +470,7 @@ const farmerRoute = (router) => {
    *         description: Internal server error
    */
 
-  router.get("/", getAllFarmers);
+  router.get("/farmers/findall", getAllFarmers);
 };
 
 module.exports = farmerRoute;
