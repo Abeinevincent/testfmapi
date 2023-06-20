@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
+const Payments = require("../../models/Payments");
 const axios = require("axios");
-const Payments = require("../models/Payments");
-// const { verifyToken } = require("../../helpers/jsonwebtoken");
 
 // Generate userId with a custom function
 const generateUniqueId = () => {
@@ -15,7 +12,7 @@ const generateUniqueId = () => {
   return id;
 };
 
-router.post("/initiatepayment", async (req, res) => {
+const initiatePayment = async (req, res) => {
   // Define the headers to be sent in the POST request
   const headers = {
     "Content-Type": "application/json",
@@ -153,10 +150,9 @@ router.post("/initiatepayment", async (req, res) => {
   };
 
   generateToken();
-});
+};
 
-// GET TRANSACTION STATUS
-router.get("/transaction-status/:userId", async (req, res) => {
+const getTransactionStatus = async (req, res) => {
   const headers = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -227,10 +223,9 @@ router.get("/transaction-status/:userId", async (req, res) => {
     console.log(err);
     return res.status(500).json(err);
   }
-});
+};
 
-// GET PAYMENT DETAILS OF A PARTICULAR USER BY USERID
-router.get("/getdetails/:userId", async (req, res) => {
+const getPaymentDetails = async (req, res) => {
   try {
     const userDetails = await Payments.findOne({ userId: req.params.userId });
     return res.status(200).json(userDetails);
@@ -238,6 +233,6 @@ router.get("/getdetails/:userId", async (req, res) => {
     console.log(err);
     return res.status(500).json(err);
   }
-});
+};
 
-module.exports = router;
+module.exports = { initiatePayment, getTransactionStatus, getPaymentDetails };

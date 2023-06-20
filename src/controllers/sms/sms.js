@@ -1,7 +1,6 @@
-const router = require("express").Router();
 const axios = require("axios");
 
-router.post("/", async (req, res) => {
+const createSMS = async (req, res) => {
   // TODO: Send message
 
   try {
@@ -26,6 +25,6 @@ router.post("/", async (req, res) => {
     console.error(err);
     return res.status(500).json(err);
   }
-});
+};
 
-module.exports = router;
+module.exports = { createSMS };

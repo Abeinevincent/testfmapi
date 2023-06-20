@@ -22,17 +22,11 @@ const awsS3Client = require("aws-sdk/clients/s3");
 // Import all routes
 
 const SupplierAuth = require("./routes/auth/supplier/auth");
-const FarmerProduceRoute = require("./routes/farmerproduce/FarmerProduce");
-const AllProduceRoute = require("./routes/farmerproduce/AllProduce");
 const VisitorsRoute = require("./routes/users/visitor");
 const RatingsRoute = require("./routes/farmerrating/farmerrating");
 const NotificationsRoute = require("./routes/notifications/notifications");
-const FarmerSpecificsRoute = require("./routes/farmerspecifics/farmerspecifics");
 const CartRoute = require("./routes/cart/cart");
-const BidRoute = require("./routes/auction/biditem");
 // const OTPRoute = require("./helpers/passwordrecovery");
-const PaymentRoute = require("./helpers/payments");
-const SMSRoute = require("./helpers/sms");
 const supplierRoutes = require("./routes/supplier/index");
 const settingsRouter = require("./routes/settings/settings");
 
@@ -147,19 +141,11 @@ cron.schedule("0 7 * * *", async () => {
   }
 });
 
-
 app.use("/api/auth/supplier", SupplierAuth);
-
-app.use("/api/farmerproduce", FarmerProduceRoute);
-app.use("/api/allproduce", AllProduceRoute);
 app.use("/api/visitors", VisitorsRoute);
 app.use("/api/ratings", RatingsRoute);
 app.use("/api/cart", CartRoute);
 app.use("/api/notifications", NotificationsRoute);
-app.use("/api/farmerspecifics", FarmerSpecificsRoute);
-app.use("/api/biditem", BidRoute);
-app.use("/api/sendsms", SMSRoute);
-app.use("/api/payments", PaymentRoute);
 // app.use("/api/otp", OTPRoute);
 app.use("/api", supplierRoutes);
 app.use("/api/settings", settingsRouter);

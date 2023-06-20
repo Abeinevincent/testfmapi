@@ -1,85 +1,197 @@
-const router = require("express").Router();
-const { verifyToken, verifyTokenAndFarmer } = require("../../helpers/token");
-const AllProduce = require("../../models/AllProduce");
-const FarmerProduce = require("../../models/FarmerProduce");
+const {
+  createAllProduce,
+  getAllProduce,
+} = require("../../controllers/farmerproduce/allproduce");
 
-// CREATE ALL PRODUCE *****************************
-router.post("/", async (req, res) => {
-  try {
-    // Check if item with same name already exists
-    const existingItem = await AllProduce.findOne({
-      itemname: req.body.itemname,
-    });
+/**
+ * @swagger
+ * tags:
+ *   name: All Produce
+ *   description: All Produce Endpoints
+ */
 
-    // Convert to tonnes if quantity is greater than 1000
-    const quantity = req.body.itemquantity;
-    const unit = req.body.itemunit;
+const allProduceRoutes = (router) => {
+  // CREATE ALL PRODUCE *****************************
 
-    if (existingItem) {
-      // If it exists, update its quantity
-      const updatedQuantity = existingItem.itemquantity + req.body.itemquantity;
-      await AllProduce.findOneAndUpdate(
-        { itemname: req.body.itemname },
-        {
-          $set: { itemquantity: updatedQuantity },
-          new: true,
-        }
-      );
-      return res.status(200).json({ message: "Successfully updated" });
-    } else {
-      // If it doesn't, create a new item
-      const newProduce = new AllProduce(req.body);
-      const savedProduce = await newProduce.save();
-      return res.status(201).json(savedProduce);
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
-  }
-});
+  /**
+   * @swagger
+   * /allproduce:
+   *   post:
+   *     summary: Create a new produce item or update existing item's quantity.
+   *     tags: [All Produce]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               itemname:
+   *                 type: string
+   *                 description: The name of the produce item.
+   *               itemquantity:
+   *                 type: number
+   *                 description: The quantity of the produce item.
+   *               itemunit:
+   *                 type: string
+   *                 description: The unit of measurement for the produce item.
+   *               itemstatus:
+   *                 type: string
+   *                 description: The status of the produce item.
+   *               itemprice:
+   *                 type: string
+   *                 description: The price of the produce item.
+   *     responses:
+   *       '201':
+   *         description: The newly created produce item.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 _id:
+   *                   type: string
+   *                   description: The ID of the produce item.
+   *                 itemname:
+   *                   type: string
+   *                   description: The name of the produce item.
+   *                 itemquantity:
+   *                   type: number
+   *                   description: The quantity of the produce item.
+   *                 itemunit:
+   *                   type: string
+   *                   description: The unit of measurement for the produce item.
+   *                 itemstatus:
+   *                   type: string
+   *                   description: The status of the produce item.
+   *                 itemprice:
+   *                   type: string
+   *                   description: The price of the produce item.
+   *       '200':
+   *         description: The quantity of an existing produce item has been updated.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The success message.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
 
-// GET ALL PRODUCE IN THE DB *******************
+  router.post("/allproduce", createAllProduce);
 
-// *****
-router.get("/", async (req, res) => {
-  try {
-    const produce = await AllProduce.find();
-    return res.status(200).json(produce);
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
-  }
-});
+  // GET ALL PRODUCE IN THE DB *******************
 
-// UPDATE PRODUCE ****************************
-router.put("/update/:itemname/:farmerId", async (req, res) => {
-  try {
-    const existingItem = await AllProduce.findOne({
-      itemname: req.params.itemname,
-    });
-    const farmerzItem = await FarmerProduce.findOne({
-      itemname: req.params.itemname,
-      farmerId: req.params.farmerId,
-    });
+  /**
+   * @swagger
+   * /allproduce:
+   *   get:
+   *     summary: Get all produce items in the database.
+   *     tags: [All Produce]
+   *     responses:
+   *       '200':
+   *         description: A list of all produce items.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   _id:
+   *                     type: string
+   *                     description: The ID of the produce item.
+   *                   itemname:
+   *                     type: string
+   *                     description: The name of the produce item.
+   *                   itemquantity:
+   *                     type: number
+   *                     description: The quantity of the produce item.
+   *                   itemunit:
+   *                     type: string
+   *                     description: The unit of measurement for the produce item.
+   *                   __v:
+   *                     type: number
+   *                     description: The version key.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
 
-    console.log(farmerzItem);
+  router.get("/allproduce", getAllProduce);
 
-    const updatedQuantity =
-      existingItem?.itemquantity -
-      (farmerzItem?.itemquantity - Number(req.body.itemquantity));
+  // UPDATE PRODUCE ****************************
 
-    await AllProduce.findOneAndUpdate(
-      { itemname: req.params.itemname },
-      {
-        $set: { itemquantity: updatedQuantity },
-        new: true,
-      }
-    );
-    return res.status(200).json({ message: "Successfully updated" });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
-  }
-});
+  /**
+   * @swagger
+   * /allproduce/update/{itemname}/{farmerId}:
+   *   put:
+   *     summary: Update the quantity of a produce item.
+   *     tags: [All Produce]
+   *     parameters:
+   *       - in: path
+   *         name: itemname
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the produce item.
+   *       - in: path
+   *         name: farmerId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ID of the farmer.
+   *       - in: body
+   *         name: requestBody
+   *         required: true
+   *         schema:
+   *           type: object
+   *           properties:
+   *             itemquantity:
+   *               type: number
+   *               description: The new quantity of the produce item.
+   *     responses:
+   *       '200':
+   *         description: Successfully updated the quantity of the produce item.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The success message.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
 
-module.exports = router;
+  router.put("/allproduce/update/:itemname/:farmerId");
+};
+
+module.exports = { allProduceRoutes };

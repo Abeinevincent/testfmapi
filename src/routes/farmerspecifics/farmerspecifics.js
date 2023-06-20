@@ -1,125 +1,383 @@
-const router = require("express").Router();
-const { verifyToken, verifyTokenAndFarmer } = require("../../helpers/token");
-const FarmerSpecifics = require("../../models/FarmerSpecifics");
+const {
+  createFarmerSpecifics,
+  getAllFarmerSpecificsOfAParticularFarmer,
+  getItemsByFarmerIdAndDistrict,
+  updateFarmerSpecifics,
+  filterFarmerSpecifics,
+} = require("../../controllers/farmerspecifics/farmerspecifics");
+const { verifyToken } = require("../../helpers/token");
 
-// Create farmerspecifics
-router.post("/", verifyToken, async (req, res) => {
-  try {
-    const farmer = await FarmerSpecifics.findOne({
-      farmername: req.body.farmername,
-      itemname: req.body.itemname,
-    });
-    if (farmer) {
-      return res.status(400).json("Farmer already uploaded this produce");
-    } else {
-      const newFarmerSpecifics = new FarmerSpecifics(req.body);
-      const savedfarmer = await newFarmerSpecifics.save();
-      return res.status(200).json(savedfarmer);
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(200).json(err);
-  }
-});
+/**
+ * @swagger
+ * tags:
+ *   name: Farmer Specifics
+ *   description: Farmer Specifics Endpoints
+ */
 
-// Get all items in a farmerspecifics of a partcular farmer
-router.get("/findall/:itemname", async (req, res) => {
-  try {
-    const farmerspecifics = await FarmerSpecifics.find({
-      itemname: req.params.itemname,
-    });
-    return res.status(200).json(farmerspecifics);
-  } catch (err) {
-    console.log(err);
-    return res.status(200).json(err);
-  }
-});
+const farmerSpecificsRoutes = (router) => {
+  // Create farmerspecifics
 
-// Get all items in a farmerspecifics of a partcular farmer oof a particular district
-router.get(
-  "/findall/:itemname/:districtname/:pricerange/:quantity",
-  async (req, res) => {
-    try {
-      const { itemname, districtname, pricerange, quantity } = req.body;
-      const farmerspecifics = await FarmerSpecifics.find({
-        itemname: req.params.itemname,
-        farmerdistrict: req.params.districtname,
-        // ....
-      });
-      return res.status(200).json(farmerspecifics);
-    } catch (err) {
-      console.log(err);
-      return res.status(200).json(err);
-    }
-  }
-);
+  /**
+   * @swagger
+   * /farmerspecifics:
+   *   post:
+   *     summary: Create farmer-specific produce item.
+   *     tags: [Farmer Specifics]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               farmername:
+   *                 type: string
+   *                 description: The name of the farmer.
+   *               itemname:
+   *                 type: string
+   *                 description: The name of the produce item.
+   *               itemquantity:
+   *                 type: number
+   *                 description: The quantity of the produce item.
+   *               itemunit:
+   *                 type: string
+   *                 description: The unit of measurement for the produce item.
+   *               itemstatus:
+   *                 type: string
+   *                 description: The status of the produce item.
+   *               itemprice:
+   *                 type: string
+   *                 description: The price of the produce item.
+   *     responses:
+   *       '200':
+   *         description: The farmer-specific produce item has been created.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 farmername:
+   *                   type: string
+   *                   description: The name of the farmer.
+   *                 itemname:
+   *                   type: string
+   *                   description: The name of the produce item.
+   *                 itemquantity:
+   *                   type: number
+   *                   description: The quantity of the produce item.
+   *                 itemunit:
+   *                   type: string
+   *                   description: The unit of measurement for the produce item.
+   *                 itemstatus:
+   *                   type: string
+   *                   description: The status of the produce item.
+   *                 itemprice:
+   *                   type: string
+   *                   description: The price of the produce item.
+   *       '400':
+   *         description: Farmer has already uploaded this produce item.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: string
+   *               description: The error message.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
 
-// UPDATE ITEM **********************************************************************
-router.put("/:itemname/:farmername", async (req, res) => {
-  try {
-    const availableItem = await FarmerSpecifics.findOne({
-      itemname: req.params.itemname,
-      farmername: req.params.farmername,
-    });
+  router.post("/farmerspecifics", verifyToken, createFarmerSpecifics);
 
-    if (availableItem) {
-      const updatedItem = await FarmerSpecifics.findOneAndUpdate(
-        { itemname: req.params.itemname, farmername: req.params.farmername },
-        {
-          $set: { itemquantity: req.body.itemquantity },
-          new: true,
-        }
-      );
-      return res.status(200).json({ message: "Successfully updated" });
-    } else {
-      return res.status(400).json("Farmer with that Item doesnot exist");
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(200).json(err);
-  }
-});
+  // Get all items in a farmerspecifics of a partcular farmer
 
-// DELETE ITEM FROM FARMERSPECIFICS DATABASE ***********
-router.delete("/remove/farmer/:farmerId/:itemname", async (req, res) => {
-  try {
-    const availableFarmer = await FarmerSpecifics.findOne({
-      farmerId: req.params.farmerId,
-      itemname: req.params.itemname,
-    });
-    console.log(availableFarmer);
-    if (availableFarmer) {
-      await FarmerSpecifics.findOneAndDelete({
-        farmerId: req.params.farmerId,
-        itemname: req.params.itemname,
-      });
-      return res.status(200).json({ message: "Item has been deleted" });
-    } else {
-      return res.status(200).json("Farmer is not with this item");
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(200).json(err);
-  }
-});
+  /**
+   * @swagger
+   * /farmerspecifics/findall/{itemname}:
+   *   get:
+   *     summary: Get all farmer-specific produce items of a particular farmer.
+   *     tags: [Farmer Specifics]
+   *     parameters:
+   *       - in: path
+   *         name: itemname
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the produce item.
+   *     responses:
+   *       '200':
+   *         description: Returns all farmer-specific produce items of the particular farmer.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   farmername:
+   *                     type: string
+   *                     description: The name of the farmer.
+   *                   itemname:
+   *                     type: string
+   *                     description: The name of the produce item.
+   *                   itemquantity:
+   *                     type: number
+   *                     description: The quantity of the produce item.
+   *                   itemunit:
+   *                     type: string
+   *                     description: The unit of measurement for the produce item.
+   *                   itemstatus:
+   *                     type: string
+   *                     description: The status of the produce item.
+   *                   itemprice:
+   *                     type: string
+   *                     description: The price of the produce item.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
 
-// FILTER BY DISTRICT OR PRICE OR QUANTITY
-router.get("/filter/:itemname/:farmerdistrict/:itemprice/:itemquantity", async (req, res) => {
-  // const { itemname } = req.params;
-  const { farmerdistrict, itemprice, itemquantity, itemname } = req.params;
+  router.get(
+    "/farmerspecifics/findall/:itemname",
+    getAllFarmerSpecificsOfAParticularFarmer
+  );
 
-  try {
-    const farmersinadistrict = await FarmerSpecifics.find({
-      farmerdistrict,
-      itemname,
-      itemprice: { $gte: itemprice },
-      itemquantity: { $lte: itemquantity },
-    });
-    return res.status(200).json(farmersinadistrict);
-  } catch (err) {
-    console.log(err);
-    return res.status(200).json(err);
-  }
-});
+  // Get all items in a farmerspecifics of a partcular farmer oof a particular district
 
-module.exports = router;
+  /**
+   * @swagger
+   * /farmerspecifics/findall/{itemname}/{districtname}/{pricerange}/{quantity}:
+   *   get:
+   *     summary: Get farmer-specific produce items of a particular item, district, price range, and quantity.
+   *     tags: [Farmer Specifics]
+   *     parameters:
+   *       - in: path
+   *         name: itemname
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the produce item.
+   *       - in: path
+   *         name: districtname
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the district.
+   *       - in: path
+   *         name: pricerange
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The price range of the produce items.
+   *       - in: path
+   *         name: quantity
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The quantity of the produce items.
+   *     responses:
+   *       '200':
+   *         description: Returns farmer-specific produce items matching the specified item, district, price range, and quantity.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   farmername:
+   *                     type: string
+   *                     description: The name of the farmer.
+   *                   itemname:
+   *                     type: string
+   *                     description: The name of the produce item.
+   *                   itemquantity:
+   *                     type: number
+   *                     description: The quantity of the produce item.
+   *                   itemunit:
+   *                     type: string
+   *                     description: The unit of measurement for the produce item.
+   *                   itemstatus:
+   *                     type: string
+   *                     description: The status of the produce item.
+   *                   itemprice:
+   *                     type: string
+   *                     description: The price of the produce item.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
+
+  router.get(
+    "/farmerspecifics/findall/:itemname/:districtname/:pricerange/:quantity",
+    getItemsByFarmerIdAndDistrict
+  );
+
+  // UPDATE ITEM **********************************************************************
+
+  /**
+   * @swagger
+   * /farmerspecifics/{itemname}/{farmername}:
+   *   put:
+   *     summary: Update item quantity in farmer-specifics.
+   *     tags: [Farmer Specifics]
+   *     parameters:
+   *       - in: path
+   *         name: itemname
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the item.
+   *       - in: path
+   *         name: farmername
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the farmer.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               itemquantity:
+   *                 type: number
+   *                 description: The updated quantity of the item.
+   *     responses:
+   *       '200':
+   *         description: Item quantity has been successfully updated.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The success message.
+   *       '400':
+   *         description: Farmer or item does not exist.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
+
+  router.put("/farmerspecifics/:itemname/:farmername", updateFarmerSpecifics);
+
+  // FILTER BY DISTRICT OR PRICE OR QUANTITY
+
+  /**
+   * @swagger
+   * /farmerspecifics/filter/{itemname}/{farmerdistrict}/{itemprice}/{itemquantity}:
+   *   get:
+   *     summary: Filter farmer-specifics by district, price, and quantity.
+   *     tags: [Farmer Specifics]
+   *     parameters:
+   *       - in: path
+   *         name: itemname
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the item.
+   *       - in: path
+   *         name: farmerdistrict
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The name of the farmer district.
+   *       - in: path
+   *         name: itemprice
+   *         required: true
+   *         schema:
+   *           type: number
+   *         description: The minimum price of the item.
+   *       - in: path
+   *         name: itemquantity
+   *         required: true
+   *         schema:
+   *           type: number
+   *         description: The maximum quantity of the item.
+   *     responses:
+   *       '200':
+   *         description: Farmer-specifics filtered by district, price, and quantity.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   _id:
+   *                     type: string
+   *                     description: The unique identifier of the farmer-specifics.
+   *                   farmername:
+   *                     type: string
+   *                     description: The name of the farmer.
+   *                   itemname:
+   *                     type: string
+   *                     description: The name of the item.
+   *                   farmerdistrict:
+   *                     type: string
+   *                     description: The district of the farmer.
+   *                   itemprice:
+   *                     type: number
+   *                     description: The price of the item.
+   *                   itemquantity:
+   *                     type: number
+   *                     description: The quantity of the item.
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: The error message.
+   */
+
+  router.get(
+    "/farmerspecifics/filter/:itemname/:farmerdistrict/:itemprice/:itemquantity",
+    filterFarmerSpecifics
+  );
+};
+
+module.exports = farmerSpecificsRoutes;
