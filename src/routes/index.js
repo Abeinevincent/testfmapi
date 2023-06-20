@@ -6,8 +6,10 @@ const farmerRoute = require("./users/farmer");
 const router = express.Router();
 
 const routes = () => {
-  // AUTH
+  // FARMER AUTH
   auth(router);
+
+  // BUYER AUTH
   buyerAuth(router);
 
   // FARMER

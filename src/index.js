@@ -149,8 +149,7 @@ cron.schedule("0 7 * * *", async () => {
 
 
 app.use("/api/auth/supplier", SupplierAuth);
-app.use("/api/users/buyer", BuyerRoute);
-app.use("/api/users/farmer", FarmerRoute);
+
 app.use("/api/farmerproduce", FarmerProduceRoute);
 app.use("/api/allproduce", AllProduceRoute);
 app.use("/api/visitors", VisitorsRoute);
